@@ -33,14 +33,44 @@ public class RestService {
 	      @Context HttpServletResponse servletResponse, 
 	      @Context HttpServletRequest response) throws IOException{
 
-		String session = response.getSession(false).getId();
+		String session = null;
+		try {
+			session = response.getSession(true).getId();
+		}
+		catch (Exception e)
+		{
+			return "<result>session does not exist</result>";
+		}
+
 		if (session != null ){
+			try {
+				if(customercode.equals(null) || customercode.equals("")){
+					return "<result>customer number must be provided</result>";
+				}
+			}
+			catch (Exception e)
+			{
+				return "<result>customer number must be provided</result>";
+			}
+
+			try {
+				if (quantity == 0) {
+					return "<result>A quantity of bricks has not been specified</result>";
+				}
+			}
+			catch (Exception e)
+			{
+				return "<result>A quantity of bricks has not been specified</result>";
+			}
+
 	    	String uniquereference = session + "-" + customercode + "-" + System.currentTimeMillis();
-	    	Order order = new Order(id, uniquereference, quantity, customercode, "Bricks");
-	    	int result = Storage.addOrder(order);
-	    	if(result == 1){
-	    		return "<result>" + order.getReference()+ "</result>";
-	    	}
+    		Order order = new Order(id, uniquereference, quantity, customercode, "Bricks");
+    		int result = Storage.addOrder(order);
+    		if(result == 1){
+    			return "<result>" + order.getReference()+ "</result>";
+    		}else {
+    				return "<result>An error occurred whilst trying to save the order </result>";
+    		}
 	    }
 	    return "<result>failure</result>";
 	}
@@ -50,7 +80,17 @@ public class RestService {
 	@Produces(MediaType.APPLICATION_XML)
 	public Order getOrder(
 			@PathParam("reference") String reference)  throws IOException{
-			Order order = Storage.getOrder(reference);
+		Order order = new Order();
+		try {
+			if (reference.equals("")){
+				return order;
+			}
+		}
+		catch ( Exception e) {
+			return order;
+		}
+		
+		order = Storage.getOrder(reference);
 		if ( order == null ) {
 	    	  order = new Order();
 		}
@@ -73,9 +113,33 @@ public class RestService {
 	    @FormParam("reference") String reference, 
 	    @FormParam("quantity") int quantity,
 	    @Context HttpServletResponse servletResponse) throws IOException{
+		
+		try {
+			if(reference.equals(null) || reference.equals("")){
+				return "<result>reference must be provided</result>";
+			}
+		}
+		catch (Exception e)
+		{
+			return "<result>reference must be provided</result>";
+		}
+
+		try {
+			if (quantity == 0) {
+				return "<result>A quantity of bricks has not been specified</result>";
+			}
+		}
+		catch (Exception e)
+		{
+			return "<result>A quantity of bricks has not been specified</result>";
+		}
+		
 		int updated = Storage.updateOrder( reference, quantity);
 		if ( updated == 0 ) {
+			return "Unable to update";
+		}else if ( updated == 2 ) { 
 			servletResponse.sendError(404);
+			return "";
 		}
 		return "<result>" + reference + " " + updated + "</result>";
 	 }
@@ -87,6 +151,16 @@ public class RestService {
 	public String FullFillOver(
 	    @FormParam("reference") String reference, 
 	    @Context HttpServletResponse servletResponse) throws IOException{
+		try {
+			if(reference.equals(null) || reference.equals("")){
+				return "<result>reference must be provided</result>";
+			}
+		}
+		catch (Exception e)
+		{
+			return "<result>reference must be provided</result>";
+		}
+
 		int updated = Storage.fulfillOrder(reference);
 		if ( updated == 0 ) {
 			servletResponse.sendError(404);

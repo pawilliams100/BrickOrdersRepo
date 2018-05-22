@@ -96,6 +96,7 @@ public class Storage {
 						order.setQuantity(quantity);
 						saveOrdersDB(orders);
 					}
+					orderExists = 2;
 					break;
 				}
 			}
